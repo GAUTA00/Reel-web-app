@@ -3,7 +3,7 @@ import type { UserSummary } from './user.types';
 
 export interface Comment {
   _id: string;
-  text: string;           // ✅ matches backend Comment model field name
+  text: string;
   user: UserSummary;
   parentId?: string | null;
   replies?: Comment[];
@@ -13,8 +13,11 @@ export interface Comment {
 export interface Reel {
   _id: string;
   videoUrl: string;
+  thumbnail?: string;          // Cloudinary eager JPG thumbnail
   title: string;
-  uploadedBy: UserSummary; // ✅ matches backend populate('uploadedBy', 'name image')
+  music?: string;              // Optional sound name
+  tags?: string[];             // Parsed hashtags
+  uploadedBy: UserSummary;
   likes: string[];
   views: number;
   shares?: number;
@@ -26,4 +29,6 @@ export interface FetchReelsResponse {
   reels: Reel[];
   totalPages: number;
   currentPage: number;
+  totalReels?: number;
+  tag?: string;
 }

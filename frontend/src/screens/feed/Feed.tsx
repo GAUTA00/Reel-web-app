@@ -1,8 +1,10 @@
 // src/screens/feed/Feed.tsx
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Menu, Home, Plus, Bell, User, LogOut, Search } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Menu, Home, Plus, Bell, User, LogOut, Search, RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import ReelCard from '../../components/ReelCard';
+import FeedSkeleton from '../../components/skeletons/FeedSkeleton';
 import { useFeed } from './useFeed';
 import type { Reel } from '../../types/reel.types';
 
@@ -43,12 +45,22 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren, ErrorBounda
   }
 }
 
-// ─── Feed Component ──────────────────────────────────────────────────────────
+// ─── Feed Component ────────────────────────────────────────────────────────────
 function Feed() {
   const [activeTab, setActiveTab] = useState<FeedTab>('foryou');
   const [activeReelId, setActiveReelId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+
+  // Pull-to-refresh state
+  const [pullY, setPullY] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const feedScrollRef = useRef<HTMLDivElement>(null);
+
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  const startReelId = searchParams.get('start');
 
   const {
     data,
@@ -98,14 +110,55 @@ function Feed() {
     };
   }, [reels]);
 
+  // Deep link: scroll to ?start=reelId after reels load
+  useEffect(() => {
+    if (!startReelId || reels.length === 0) return;
+    const el = document.querySelector(`[data-id="${startReelId}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [startReelId, reels.length]);
+
+  // Pull-to-refresh handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const scrollTop = feedScrollRef.current?.scrollTop ?? 0;
+    if (scrollTop === 0) touchStartY.current = e.touches[0].clientY;
+    else touchStartY.current = 0;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartY.current) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    if (delta > 0) setPullY(Math.min(delta, 90));
+  };
+  const handleTouchEnd = async () => {
+    if (pullY > 60) {
+      setIsRefreshing(true);
+      await queryClient.invalidateQueries({ queryKey: ['feed', activeTab] });
+      setIsRefreshing(false);
+    }
+    setPullY(0);
+    touchStartY.current = 0;
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem('auth-storage'); // ✅ Zustand persisted key — what axios reads
+    localStorage.removeItem('auth-storage');
     window.location.href = '/login';
   };
 
   return (
     <ErrorBoundary>
       <div className="relative h-[100dvh] bg-black overflow-hidden flex flex-col">
+
+        {/* Pull-to-refresh indicator */}
+        {(pullY > 0 || isRefreshing) && (
+          <div
+            className="absolute top-0 left-0 right-0 z-50 flex items-center justify-center transition-all duration-200"
+            style={{ height: `${Math.max(pullY, isRefreshing ? 48 : 0)}px`, opacity: pullY > 20 || isRefreshing ? 1 : 0 }}
+          >
+            <div className={`flex items-center gap-2 text-white text-xs font-semibold bg-black/70 px-4 py-2 rounded-full backdrop-blur-sm ${isRefreshing ? 'opacity-100' : ''}`}>
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-pull-spin' : ''}`} style={{ transform: !isRefreshing ? `rotate(${pullY * 3}deg)` : undefined }} />
+              {isRefreshing ? 'Refreshing...' : pullY > 60 ? 'Release to refresh' : 'Pull to refresh'}
+            </div>
+          </div>
+        )}
 
         {/* TOP BAR */}
         <header className="absolute top-0 w-full z-40 flex items-center justify-between px-4 py-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
@@ -144,11 +197,19 @@ function Feed() {
         </header>
 
         {/* REELS FEED */}
-        <div className="flex-1 overflow-y-scroll snap-y snap-mandatory scrollbar-hide h-full">
+        <div
+          ref={feedScrollRef}
+          className="flex-1 overflow-y-scroll snap-y snap-mandatory scrollbar-hide h-full"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ paddingTop: pullY > 0 ? `${pullY}px` : undefined, transition: pullY === 0 ? 'padding 0.3s ease' : 'none' }}
+        >
 
           {isError && (
             <div className="flex flex-col justify-center items-center h-full text-red-500">
               <p>Failed to load reels.</p>
+              <button onClick={() => queryClient.invalidateQueries({ queryKey: ['feed', activeTab] })} className="mt-3 text-pink-400 text-sm underline">Retry</button>
             </div>
           )}
 
@@ -182,9 +243,7 @@ function Feed() {
           })}
 
           {(isLoading || isFetchingNextPage) && (
-            <div className="snap-start h-[100dvh] w-full flex justify-center items-center bg-black text-gray-500">
-              Loading more...
-            </div>
+            <FeedSkeleton />
           )}
         </div>
 

@@ -1,9 +1,11 @@
 // src/components/reel/ReelInfo.tsx
+import { Link } from 'react-router-dom';
 import { Music2 } from 'lucide-react';
 
 interface ReelInfoProps {
   username: string;
   title: string;
+  music?: string;          // Actual sound name from the reel
   isOwnProfile: boolean;
   isFollowing: boolean;
   onProfileClick: (e: React.MouseEvent) => void;
@@ -13,13 +15,17 @@ interface ReelInfoProps {
 export default function ReelInfo({
   username,
   title,
+  music,
   isOwnProfile,
   isFollowing,
   onProfileClick,
   onFollowToggle,
 }: ReelInfoProps) {
-  const hashtags = title.match(/#[a-z0-9_]+/gi);
+  const hashtags = title.match(/#[a-z0-9_]+/gi) ?? [];
   const cleanTitle = title.replace(/#[a-z0-9_]+/gi, '').trim();
+  const soundLabel = music || `Original Sound - @${username}`;
+  // Duplicate the label for seamless marquee loop
+  const marqueeText = `${soundLabel}   •   ${soundLabel}   •   `;
 
   return (
     <div className="absolute left-4 bottom-8 right-16 z-20 flex flex-col items-start gap-2">
@@ -45,25 +51,36 @@ export default function ReelInfo({
         )}
       </div>
 
-      {/* Caption + hashtags */}
-      <div className="text-white text-sm opacity-90 leading-tight">
-        <span className="mr-2">{cleanTitle}</span>
-        {hashtags && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {hashtags.map((tag, i) => (
-              <span key={i} className="font-bold text-white mr-1">
-                #{tag.replace('#', '')}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Caption text */}
+      {cleanTitle && (
+        <p className="text-white text-sm opacity-90 leading-tight drop-shadow-md max-w-[240px]">
+          {cleanTitle}
+        </p>
+      )}
 
-      {/* Audio marquee */}
-      <div className="flex items-center gap-2 mt-2 opacity-80">
-        <Music2 className="w-4 h-4 text-white" />
-        <div className="text-xs text-white overflow-hidden w-40 whitespace-nowrap">
-          <span>Original Sound - @{username} • Original Sound - @{username}</span>
+      {/* Clickable hashtags */}
+      {hashtags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {hashtags.map((tag, i) => (
+            <Link
+              key={i}
+              to={`/tag/${tag.slice(1).toLowerCase()}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-white font-bold text-sm hover:text-pink-400 transition drop-shadow-md"
+            >
+              {tag}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Music marquee */}
+      <div className="flex items-center gap-2 mt-1 opacity-90 max-w-[220px] overflow-hidden">
+        <Music2 className="w-4 h-4 text-white shrink-0 animate-spin-slow" />
+        <div className="overflow-hidden w-full">
+          <div className="whitespace-nowrap animate-marquee text-xs text-white drop-shadow-md">
+            {marqueeText}{marqueeText}
+          </div>
         </div>
       </div>
     </div>

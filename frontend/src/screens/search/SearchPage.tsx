@@ -1,7 +1,8 @@
 // src/screens/search/SearchPage.tsx
 import { useNavigate } from 'react-router-dom';
-import { Search, Loader2, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { useSearch } from './useSearch';
+import SearchSkeleton from '../../components/skeletons/SearchSkeleton';
 import type { User } from '../../types/user.types';
 
 export default function SearchPage() {
@@ -34,9 +35,7 @@ export default function SearchPage() {
       {/* Results */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-pink-500" />
-          </div>
+          <SearchSkeleton />
         ) : results.length === 0 && debouncedQuery.trim() ? (
           <div className="text-center text-gray-500 py-10">
             No users found for &quot;{debouncedQuery}&quot;

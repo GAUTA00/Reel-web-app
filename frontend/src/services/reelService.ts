@@ -80,3 +80,8 @@ export const uploadReel = async (formData: FormData): Promise<Reel> => {
   });
   return res.data;
 };
+
+export const fetchReelsByTag = async (tag: string, page = 1, limit = 5): Promise<FetchReelsResponse> => {
+  const res = await axiosInstance.get<FetchReelsResponse>(`/reels/tag/${encodeURIComponent(tag)}?page=${page}&limit=${limit}`);
+  return res.data;
+};

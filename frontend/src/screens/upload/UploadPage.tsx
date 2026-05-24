@@ -1,7 +1,7 @@
 // src/screens/upload/UploadPage.tsx
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, X, Film, Loader2 } from 'lucide-react';
+import { Upload, X, Film, Loader2, Music2 } from 'lucide-react';
 import { useUpload } from './useUpload';
 
 const MAX_FILE_SIZE_MB = 100;
@@ -19,6 +19,7 @@ export default function UploadPage() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [title, setTitle] = useState('');
+  const [music, setMusic] = useState('');
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,6 +61,7 @@ export default function UploadPage() {
     const formData = new FormData();
     formData.append('video', videoFile);
     formData.append('title', title);
+    if (music.trim()) formData.append('music', music.trim());
     uploadReel(formData);
   };
 
@@ -67,6 +69,7 @@ export default function UploadPage() {
     setVideoFile(null);
     setVideoPreview(null);
     setTitle('');
+    setMusic('');
   };
 
   return (
@@ -157,6 +160,26 @@ export default function UploadPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Write a caption... #hashtags"
                 className="w-full bg-transparent text-white text-lg border-b border-gray-800 focus:border-white outline-none py-2 resize-none min-h-[100px] placeholder-gray-600 transition"
+              />
+              {title && /#[a-z0-9_]+/i.test(title) && (
+                <p className="text-sm text-pink-400 mt-1">
+                  {(title.match(/#[a-z0-9_]+/gi) || []).join(' ')}
+                </p>
+              )}
+            </div>
+
+            {/* Music / Sound name */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-gray-400 flex items-center gap-2">
+                <Music2 className="w-4 h-4 text-pink-400" />
+                Sound name <span className="text-gray-600 font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={music}
+                onChange={(e) => setMusic(e.target.value)}
+                placeholder="e.g. Blinding Lights - The Weeknd"
+                className="w-full bg-transparent text-white border-b border-gray-800 focus:border-white outline-none py-2 placeholder-gray-600 transition text-sm"
               />
             </div>
 

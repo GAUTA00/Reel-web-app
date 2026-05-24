@@ -19,7 +19,14 @@ const storage = new CloudinaryStorage({
             resource_type: isImage ? 'image' : 'video',
             allowed_formats: isImage
                 ? ['jpg', 'png', 'jpeg', 'webp']
-                : ['mp4', 'mov', 'avi', 'mkv'],
+                : ['mp4', 'mov', 'avi', 'mkv', 'webm'],
+            // Auto-generate a JPG thumbnail for videos
+            ...(isImage ? {} : {
+                eager: [
+                    { format: 'jpg', quality: 'auto', width: 400, crop: 'fill', gravity: 'center' }
+                ],
+                eager_async: false, // Wait for thumbnail before responding
+            }),
         };
     },
 });

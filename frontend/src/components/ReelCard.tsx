@@ -239,6 +239,7 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
       <ReelInfo
         username={username}
         title={reel.title}
+        music={reel.music}
         isOwnProfile={isOwnProfile}
         isFollowing={isFollowing}
         onProfileClick={handleProfileClick}

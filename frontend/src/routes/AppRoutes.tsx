@@ -12,6 +12,7 @@ import UploadPage from '../screens/upload/UploadPage';
 import Notifications from '../screens/notifications/Notifications';
 import Friends from '../screens/friends/Friends';
 import SearchPage from '../screens/search/SearchPage';
+import TagPage from '../screens/tag/TagPage';
 
 export default function AppRoutes() {
   return (
@@ -29,6 +30,7 @@ export default function AppRoutes() {
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/friends" element={<Friends />} />
       <Route path="/search" element={<SearchPage />} />
+      <Route path="/tag/:tag" element={<TagPage />} />
     </Routes>
   );
 }

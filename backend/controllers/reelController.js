@@ -7,14 +7,23 @@ import { cloudinary } from '../config/cloudinaryConfig.js';
 // Upload a new reel
 export const uploadReel = async (req, res) => {
     try {
-        const { title } = req.body;
+        const { title, music } = req.body;
         const videoFile = req.file;
 
         if (!videoFile) return res.status(400).json({ message: 'No video uploaded.' });
 
+        // Parse hashtags from caption
+        const tags = (title?.match(/#[a-z0-9_]+/gi) || []).map(t => t.slice(1).toLowerCase());
+
+        // Get thumbnail from Cloudinary eager transform (if generated)
+        const thumbnail = videoFile.eager?.[0]?.secure_url || null;
+
         const reel = await Reel.create({
-            title,
-            videoUrl: videoFile.path, // Use Cloudinary URL directly
+            title: title || '',
+            videoUrl: videoFile.path,
+            thumbnail,
+            music: music || null,
+            tags,
             uploadedBy: req.user._id,
         });
 
@@ -348,6 +357,34 @@ export const shareReel = async (req, res) => {
         );
         if (!reel) return res.status(404).json({ message: 'Reel not found' });
         res.status(200).json({ shares: reel.shares });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+};
+
+// Get reels by hashtag tag
+export const getReelsByTag = async (req, res) => {
+    try {
+        const { tag } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const query = { tags: tag.toLowerCase() };
+        const totalReels = await Reel.countDocuments(query);
+        const reels = await Reel.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('uploadedBy', 'name image');
+
+        res.status(200).json({
+            reels,
+            currentPage: page,
+            totalPages: Math.ceil(totalReels / limit),
+            totalReels,
+            tag,
+        });
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
     }

@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
 
-
 const reelSchema = new mongoose.Schema({
-    title: String,
+    title: { type: String, default: '' },
     videoUrl: String,
+    thumbnail: { type: String, default: null },   // Cloudinary eager thumbnail URL
+    music: { type: String, default: null },        // Optional sound/song name
+    tags: [{ type: String }],                      // Parsed hashtags from title
     uploadedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -14,9 +16,10 @@ const reelSchema = new mongoose.Schema({
     shares: { type: Number, default: 0 },
 }, { timestamps: true });
 
-// Add Indexes
+// Indexes
 reelSchema.index({ uploadedBy: 1 });
-reelSchema.index({ createdAt: -1 }); // For sorting feeds
-
+reelSchema.index({ createdAt: -1 });
+reelSchema.index({ tags: 1 });           // For fast tag-based queries
 
 export default mongoose.model('Reel', reelSchema);
+

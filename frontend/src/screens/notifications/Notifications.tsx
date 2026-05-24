@@ -2,6 +2,7 @@
 import { ArrowLeft, Heart, MessageCircle, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNotifications } from './useNotifications';
+import NotificationSkeleton from '../../components/skeletons/NotificationSkeleton';
 import type { Notification, NotificationType } from '../../types/notification.types';
 
 const getIcon = (type: NotificationType) => {
@@ -53,7 +54,7 @@ export default function Notifications() {
       {/* List */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="text-center text-gray-500 mt-10">Loading...</div>
+          <NotificationSkeleton />
         ) : notifications.length === 0 ? (
           <div className="text-center text-gray-500 mt-10 flex flex-col items-center">
             <div className="p-4 bg-gray-900 rounded-full mb-4">

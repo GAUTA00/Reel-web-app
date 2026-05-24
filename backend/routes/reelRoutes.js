@@ -1,4 +1,3 @@
-// ✅ reels router (routes/reelRoutes.js)
 import express from 'express';
 import upload from '../config/multerConfig.js';
 import {
@@ -16,7 +15,8 @@ import {
     shareReel,
     getFollowingReels,
     getUserReels,
-    getLikedReels
+    getLikedReels,
+    getReelsByTag,
 } from '../controllers/reelController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 
@@ -24,10 +24,11 @@ const router = express.Router();
 
 // ✅ Correct route ordering: static routes BEFORE dynamic `/:id` ones
 router.post('/upload', authMiddleware, upload.single('video'), uploadReel);
-router.get('/following', authMiddleware, getFollowingReels); // <-- New Route
-router.get('/all', getAllReels);             // <-- MUST be before /:id
-router.get('/liked', authMiddleware, getLikedReels); // <-- New Route
-router.get('/my', authMiddleware, getMyReels); // <-- MUST be before /:id
+router.get('/following', authMiddleware, getFollowingReels);
+router.get('/all', getAllReels);
+router.get('/liked', authMiddleware, getLikedReels);
+router.get('/my', authMiddleware, getMyReels);
+router.get('/tag/:tag', getReelsByTag);          // ✅ Tag browse — static before /:id
 router.get('/user/:userId', authMiddleware, getUserReels);
 
 

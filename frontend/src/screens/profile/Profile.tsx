@@ -1,10 +1,11 @@
 // src/screens/profile/Profile.tsx
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useRef } from 'react';
-import { ArrowLeft, Settings, Grid, Heart, Video, Trash2 } from 'lucide-react';
+import { ArrowLeft, Settings, Grid, Heart, Video, Trash2, Play } from 'lucide-react';
 import { toast, ToastContainer } from 'react-toastify';
 import { useProfile } from './useProfile';
 import { useAuthStore } from '../../store/authStore';
+import ProfileSkeleton from '../../components/skeletons/ProfileSkeleton';
 import type { Reel } from '../../types/reel.types';
 
 export default function Profile() {
@@ -78,7 +79,7 @@ export default function Profile() {
   };
 
   if (profileQuery.isLoading || reelsQuery.isLoading) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+    return <ProfileSkeleton />;
   }
   if (profileQuery.isError) {
     return <div className="min-h-screen bg-black text-red-500 flex items-center justify-center">Failed to load profile</div>;
@@ -211,13 +212,23 @@ export default function Profile() {
           const videoSrc = reel.videoUrl.startsWith('http')
             ? reel.videoUrl
             : `http://localhost:8080${reel.videoUrl}`;
+          const thumbSrc = reel.thumbnail || videoSrc;
           return (
             <div
               key={reel._id}
               className="aspect-[3/4] bg-gray-900 relative group overflow-hidden cursor-pointer"
               onClick={() => navigate(`/feed?start=${reel._id}`)}
             >
-              <video src={videoSrc} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition" />
+              {/* Use thumbnail image for fast load */}
+              {reel.thumbnail ? (
+                <img src={thumbSrc} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition" alt={reel.title} />
+              ) : (
+                <video src={videoSrc} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition" />
+              )}
+              {/* Play overlay on hover */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <Play className="w-8 h-8 text-white fill-white drop-shadow-lg" />
+              </div>
               <div className="absolute bottom-1 left-2 flex items-center gap-1 text-white text-xs drop-shadow-md">
                 <Video className="w-3 h-3" />
                 {reel.views || 0}
@@ -225,7 +236,7 @@ export default function Profile() {
               {isOwnProfile && (
                 <button
                   onClick={(e) => handleDeleteReel(e, reel._id)}
-                  className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full hover:bg-red-500/80 transition"
+                  className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full hover:bg-red-500/80 transition opacity-0 group-hover:opacity-100"
                 >
                   <Trash2 className="w-4 h-4 text-white" />
                 </button>
