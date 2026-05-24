@@ -1,17 +1,20 @@
 // src/screens/search/useSearch.ts
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { searchUsers } from '../../services/userService';
 
 export const useSearch = () => {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounce — update debouncedQuery 500ms after typing stops
+  // Proper debounce — cancels previous timer before setting a new one
   const handleQueryChange = (value: string) => {
     setQuery(value);
-    const timer = setTimeout(() => setDebouncedQuery(value), 500);
-    return () => clearTimeout(timer);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setDebouncedQuery(value);
+    }, 500);
   };
 
   const searchQuery = useQuery({

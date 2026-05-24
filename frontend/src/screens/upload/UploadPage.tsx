@@ -4,9 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { Upload, X, Film, Loader2 } from 'lucide-react';
 import { useUpload } from './useUpload';
 
+const MAX_FILE_SIZE_MB = 100;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export default function UploadPage() {
   const navigate = useNavigate();
-  const { mutate: uploadReel, isPending } = useUpload();
+  const { mutate: uploadReel, isPending, progress } = useUpload();
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
@@ -29,12 +37,16 @@ export default function UploadPage() {
   };
 
   const handleFile = (file: File) => {
-    if (file.type.startsWith('video/')) {
-      setVideoFile(file);
-      setVideoPreview(URL.createObjectURL(file));
-    } else {
+    if (!file.type.startsWith('video/')) {
       alert('Please select a valid video file.');
+      return;
     }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      alert(`File is too large (${formatFileSize(file.size)}). Maximum allowed size is ${MAX_FILE_SIZE_MB}MB.`);
+      return;
+    }
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +71,28 @@ export default function UploadPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col p-6 animate-fade-in font-sans">
+      {/* Progress bar during upload */}
+      {isPending && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center gap-4 backdrop-blur-sm">
+          <Loader2 className="w-10 h-10 animate-spin text-pink-500" />
+          <p className="text-white font-semibold text-lg">Uploading your reel...</p>
+          {progress !== null && (
+            <div className="w-64">
+              <div className="flex justify-between text-sm text-gray-400 mb-1">
+                <span>Progress</span>
+                <span>{progress}%</span>
+              </div>
+              <div className="w-full bg-gray-800 rounded-full h-2">
+                <div
+                  className="bg-pink-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-white transition">Cancel</button>
@@ -94,7 +128,7 @@ export default function UploadPage() {
               </div>
               <p className="font-semibold text-lg">Select video to upload</p>
               <p className="text-sm text-gray-500 mt-2">or drag and drop a file</p>
-              <p className="text-xs text-gray-600 mt-8">MP4 or WebM • 720x1280 or higher • Up to 10 minutes</p>
+          <p className="text-xs text-gray-600 mt-8">MP4 or WebM • Up to {MAX_FILE_SIZE_MB}MB</p>
             </div>
           ) : (
             <div className="relative flex-1 min-h-[500px] bg-gray-900 rounded-2xl overflow-hidden shadow-2xl group border border-gray-800">
@@ -105,6 +139,9 @@ export default function UploadPage() {
               <div className="absolute bottom-4 left-4 bg-black/60 px-3 py-1 rounded-md backdrop-blur-sm text-xs font-mono border border-white/10 flex items-center gap-2">
                 <Film className="w-3 h-3 text-pink-500" />
                 <span>PREVIEW MODE</span>
+                {videoFile && (
+                  <span className="text-gray-400 ml-2">({formatFileSize(videoFile.size)})</span>
+                )}
               </div>
             </div>
           )}

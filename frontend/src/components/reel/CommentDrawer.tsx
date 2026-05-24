@@ -32,7 +32,7 @@ function CommentItem({ comment, replies, onReply }: CommentItemProps) {
   return (
     <div className="flex gap-3 mb-4">
       <img
-        src={comment.user?.image || '/default-avatar.png'}
+        src={comment.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user?.name || 'U')}&background=374151&color=fff`}
         className="w-8 h-8 rounded-full object-cover shrink-0"
         alt={comment.user?.name}
       />
@@ -45,7 +45,7 @@ function CommentItem({ comment, replies, onReply }: CommentItemProps) {
             </span>
           )}
         </p>
-        <p className="text-sm text-white leading-tight mt-0.5">{comment.comment}</p>
+        <p className="text-sm text-white leading-tight mt-0.5">{comment.text}</p>
         <button
           onClick={() => onReply(comment)}
           className="text-[10px] font-semibold text-gray-500 mt-1 hover:text-white"

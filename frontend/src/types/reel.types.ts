@@ -3,7 +3,7 @@ import type { UserSummary } from './user.types';
 
 export interface Comment {
   _id: string;
-  comment: string;
+  text: string;           // ✅ matches backend Comment model field name
   user: UserSummary;
   parentId?: string | null;
   replies?: Comment[];
@@ -14,7 +14,7 @@ export interface Reel {
   _id: string;
   videoUrl: string;
   title: string;
-  user: UserSummary;
+  uploadedBy: UserSummary; // ✅ matches backend populate('uploadedBy', 'name image')
   likes: string[];
   views: number;
   shares?: number;

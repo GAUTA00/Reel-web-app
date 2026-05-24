@@ -43,7 +43,7 @@ export default function Friends() {
               <div key={friend._id} className="flex items-center justify-between bg-gray-900/50 p-4 rounded-xl border border-gray-800">
                 <div className="flex items-center gap-3">
                   <img
-                    src={friend.image || '/default-avatar.png'}
+                    src={friend.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.name)}&background=374151&color=fff`}
                     className="w-12 h-12 rounded-full object-cover border border-gray-700"
                     alt={friend.name}
                   />

@@ -38,9 +38,16 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+
+    // 401 = no token / 403 = invalid or expired token — both mean logout
+    if (status === 401 || status === 403) {
       localStorage.removeItem('auth-storage');
-      window.location.href = '/login';
+      // Only redirect if not already on an auth page to avoid redirect loops
+      const authPaths = ['/login', '/signup', '/', '/auth/google/callback', '/google-auth-success'];
+      if (!authPaths.includes(window.location.pathname)) {
+        window.location.href = '/login';
+      }
     }
 
     const message =

@@ -92,14 +92,14 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
       if (jwt) currentUserId = JSON.parse(atob(jwt.split('.')[1]))?._id;
     } catch { return; }
 
-    const uploaderId = reel.user?._id;
+    const uploaderId = reel.uploadedBy?._id; // ✅ fixed: was reel.user
     if (!uploaderId || !currentUserId) return;
     setIsOwnProfile(currentUserId === uploaderId);
 
     getMyProfile().then((data) => {
       setIsFollowing(data.following.some((u) => u._id === uploaderId));
     }).catch(() => {});
-  }, [reel.user?._id]);
+  }, [reel.uploadedBy?._id]); // ✅ fixed dependency
 
   // ── Fetch comments when drawer opens ───────────────────────────────────
   useEffect(() => {
@@ -160,7 +160,7 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
   };
 
   const handleFollowToggle = async () => {
-    const uploaderId = reel.user?._id;
+    const uploaderId = reel.uploadedBy?._id; // ✅ fixed: was reel.user
     if (!uploaderId || isOwnProfile) return;
     try {
       isFollowing ? await apiUnfollowUser(uploaderId) : await apiFollowUser(uploaderId);
@@ -170,7 +170,7 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
 
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (reel.user?._id) navigate(`/profile/${reel.user._id}`);
+    if (reel.uploadedBy?._id) navigate(`/profile/${reel.uploadedBy._id}`); // ✅ fixed: was reel.user
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
@@ -196,7 +196,7 @@ export default function ReelCard({ reel, isActive }: ReelCardProps) {
     setTimeout(() => commentInputRef.current?.focus(), 100);
   };
 
-  const reelUser = reel.user;
+  const reelUser = reel.uploadedBy; // ✅ fixed: was reel.user
   const username = reelUser?.name?.split(' ')[0] || 'User';
 
   return (

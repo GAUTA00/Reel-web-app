@@ -30,7 +30,13 @@ const googleAuth = async (req, res) => {
             expiresIn: process.env.JWT_TIMEOUT,
         });
 
-        res.redirect(`${process.env.FRONTEND_URL}/google-auth-success?token=${token}`);
+        const userPayload = encodeURIComponent(JSON.stringify({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            image: user.image,
+        }));
+        res.redirect(`${process.env.FRONTEND_URL}/google-auth-success?token=${token}&user=${userPayload}`);
     } catch (err) {
         console.error("Google Login Error:", err);
         res.status(500).json({ message: "Google login failed" });

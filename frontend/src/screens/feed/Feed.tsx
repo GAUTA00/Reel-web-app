@@ -99,8 +99,7 @@ function Feed() {
   }, [reels]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('auth-storage'); // ✅ Zustand persisted key — what axios reads
     window.location.href = '/login';
   };
 
